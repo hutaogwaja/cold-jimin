@@ -1,0 +1,17 @@
+{
+  "name": "cold-jimin",
+  "version": "1.0.0",
+  "description": "차가운 인공지민",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "discord.js": "^14.27.0",
+    "dotenv": "^17.4.2"
+  }
+}
