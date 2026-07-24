@@ -8,6 +8,10 @@ const client = new Client({
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
+
+        // 아래는 DM용 인텐드
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.DirectMessageTyping,
     ],
 });
 
