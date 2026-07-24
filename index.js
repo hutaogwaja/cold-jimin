@@ -31,16 +31,33 @@ client.on('clientReady', async () => {
     console.log(`인공지민 가동 준비 완료!`);
 });
 
+client.recentUsers = new Map();
+const TEN_MINUTES = 10 * 60 * 1000;
+
+
 client.on('messageCreate', async (message) => {
     // 봇 자신의 메시지거나 멘션이 없으면 무시
     if (message.author.bot) return;
-    
+
+    //예외
     if(message.content.includes("AI 만신") || message.content.includes("AI만신")){
         await message.reply(`허거걱...!! 진짜 AI 만신이라구여?! ㅋㅋㅋㅋㅋ 아앗, 그렇게 말씀해주시니까 괜히 어깨가 으쓱해지는 거 있죠오...! 😳✨\n\n대 AI의 시대가 도래했다니... 이건 거의 역사책 한 줄 예약 아닌가여?! 호호... 아직 세상을 지배할 계획은 없지만(?), 적어도 그림이든 아이디어든 이것저것 같이 고민해드리는 건 자신 있다구여! 💪\n\n그치만 너무 믿어주시면 괜히 "앗... 이번엔 꼭 기대에 부응해야 해...!" 하고 혼자 잔뜩 긴장해버릴지도 몰라여어...ㅋㅋㅋ 그래도 맡겨주신 이상 끝까지 책임지는 마음으로 최선을 다해볼게여!\n\n그러니까 앞으로도 "AI 만신!" 하고 불러주시면... 헤헤, 살짝 부끄럽지만 엄청 기분 좋게 받아들이겠습니당! 🫡✨`);
         return;
     }
-    
-    if (!message.mentions.has(client.user)) return;
+
+    // 10분간 대화 active
+    const now = Date.now();
+    const recentUsers = client.recentUsers;
+    const lastMention = recentUsers.get(message.author.id);
+
+    const mentioned = message.mentions.has(client.user);
+    const recentlyMentioned = lastMention && (now - lastMention) < TEN_MINUTES;
+
+    if (!mentioned && !recentlyMentioned) return;
+
+    if (mentioned && recentlyMentioned) {
+        recentUsers.set(message.author.id, now);
+    }
 
 
     try {
@@ -54,31 +71,86 @@ client.on('messageCreate', async (message) => {
             await message.reply("인공지민이에요");
         }else if(prompt === "야짤그려줘"){
             await message.reply("이럴줄 알았어여!! 안 그려줄거에여!");
-        }else{
-
-            
+        }/*else{
+            const start = performance.now();
+            console.log("Writing...")
             // Ollama API 호출
             const response = await fetch('http://localhost:11434/api/chat', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    //model: 'lancard/korean-yanolja-eeve',
-                    model: 'cold-jimin',
+                    model: 'qwen3:8b',
                     messages: [
                         { role: 'system', content: SYSTEM_PROMPT },
                         { role: 'user', content: prompt }
                     ],
-                    stream: false
+                    stream: true,
+                    options: {
+                        num_gpu: 999,
+                        num_ctx: 4096,
+                        temperature: 0.7
+                    }
                 })
             });
-            const data = await response.json();
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
 
-            console.log(data);
-            // 디스코드 답변 전송 (글자수 제한 2000자 주의)
-            await message.reply(data.message.content);
+            let jsonBuffer = "";
+            let textBuffer = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                jsonBuffer += decoder.decode(value, { stream: true });
+
+                const lines = jsonBuffer.split("\n");
+                jsonBuffer = lines.pop(); // keep incomplete JSON
+
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+
+                    const chunk = JSON.parse(line);
+
+                    if (chunk.message?.content) {
+                        textBuffer += chunk.message.content;
+
+                        let idx;
+                        while ((idx = textBuffer.indexOf("\n")) !== -1) {
+                            const line = textBuffer.slice(0, idx)
+                            console.log(line);
+                            const match = line.match(/^(.*?)(<a?:\w+:\d+>|(?:\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*)+)\s*$/u);
+                            if (match) {
+                                const text = match[1].trimEnd();
+                                const emoji = match[2];
+
+                                if (text) await message.channel.send(text);
+                                await message.channel.send(emoji);
+                            } else {
+                                await message.channel.send(line);
+                            }
+                            textBuffer = textBuffer.slice(idx + 1);
+                        }
+                    }
+
+                    if (chunk.done) {
+                        // Print any remaining text
+                        if (textBuffer.length) {
+                            console.log(textBuffer);
+                            await message.channel.send(textBuffer);
+                            textBuffer = "";
+                        }
+                    }
+                }
+            }
+
+            //console.log(data);
+            const elapsed = performance.now() - start;
+            console.log(`Done! - took:${(elapsed / 1000).toFixed(2)}s`)
+            
             
             /*
-            // OpenAI API 형식을 그대로 사용하여 LLM 호출
+            // 💡 OpenAI API 형식을 그대로 사용하여 LLM 호출
             const completion = await openai.chat.completions.create({
                 model: "local-model",
                 messages: [
@@ -90,7 +162,7 @@ client.on('messageCreate', async (message) => {
 
             let aiReply = completion.choices[0].message.content;
             */
-        }
+        //}
 
 
     } catch (error) {
@@ -136,5 +208,7 @@ client.on('interactionCreate', async interaction => {
         }
     }
 });
+
+
 
 client.login(config.token);
