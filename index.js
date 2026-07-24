@@ -25,9 +25,6 @@ client.on('ready', () => {
 
 client.on('messageCreate', async (message) => {
     // 봇 자신의 메시지거나 멘션이 없으면 무시
-    
-    console.log(message);
-
     if (message.author.bot) return;
     if (!message.mentions.has(client.user)) return;
 
@@ -37,7 +34,15 @@ client.on('messageCreate', async (message) => {
         await message.channel.sendTyping();
 
         // 순수 텍스트만 추출 (멘션 태그 제거)
-        const prompt = message.content.replace(`<@!${client.user.id}>`, '').trim();
+        const prompt = message.content.replace(`<@${client.user.id}>`, '').trim();
+        console.log(prompt);
+        if(!prompt){
+            await message.reply("인공지민이에요");
+        }else if(prompt === "야짤그려줘"){
+            await message.reply("이럴줄 알았어요!! 안 그려줄거에요!");
+        }else{
+            await message.reply("뭔가를 답변해야 하는데 아직 학습 안 해서 이 말 밖에 못하네요..");
+        }
 /*
         // Ollama API 호출
         const response = await fetch('http://localhost:11434/api/generate', {
@@ -56,7 +61,6 @@ client.on('messageCreate', async (message) => {
         await message.reply(data.response);
 */
 
-        await message.reply("인공지민이에요");
     } catch (error) {
         console.error(error);
         await message.reply('AI 모델과 통신 중 오류가 발생했습니다.');
