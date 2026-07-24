@@ -29,16 +29,6 @@ const client = new Client({
 
 client.on('clientReady', async () => {
     console.log(`인공지민 가동 준비 완료!`);
-
-    try {
-        const completion = await openai.chat.completions.create({
-            model: "local-model", // LM Studio는 모델 이름을 보통 아무거나(local-model 등) 넣어도 켜져 있는 모델로 연결됩니다.
-            messages: [{ role: "user", content: "인공지민? LM Studio에 연결되었는지 확인해줘" }],
-        });
-        console.log(`[AI 연결 성공] LM Studio 응답: ${completion.choices[0].message.content.trim()}`);
-    } catch (error) {
-        console.error('[AI 연결 실패] LM Studio Local Server가 켜져 있는지 확인해주세요!', error.message);
-    }
 });
 
 client.on('messageCreate', async (message) => {
@@ -60,9 +50,9 @@ client.on('messageCreate', async (message) => {
             await message.reply("이럴줄 알았어여!! 안 그려줄거에여!");
         }else{
 
-            /*
+            
             // Ollama API 호출
-            const response = await fetch('http://localhost:11434/api/chat', { // 👈 /api/generate 에서 변경!
+            const response = await fetch('http://localhost:11434/api/chat', { 
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -80,8 +70,8 @@ client.on('messageCreate', async (message) => {
             console.log(data);
             // 디스코드 답변 전송 (글자수 제한 2000자 주의)
             await message.reply(data.message.content);
-            */
-
+            
+            /*
             // 💡 OpenAI API 형식을 그대로 사용하여 LLM 호출
             const completion = await openai.chat.completions.create({
                 model: "local-model",
@@ -93,6 +83,7 @@ client.on('messageCreate', async (message) => {
             });
 
             let aiReply = completion.choices[0].message.content;
+            */
         }
 
 

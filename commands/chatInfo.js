@@ -8,7 +8,8 @@ export default {
 
     // 명령어가 실행되었을 때 동작
     async execute(interaction) {
-        await interaction.reply(`여기있어요!\n[LG AI팀에서 만든 EXAONE 3.5버전이에요](//https://huggingface.co/LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct)`);
+        await interaction.reply(`내 안에 뭐가 있더라?`)
+        //await interaction.reply(`여기있어요!\n[LG AI팀에서 만든 EXAONE 3.5버전이에요](//https://huggingface.co/LGAI-EXAONE/EXAONE-3.5-7.8B-Instruct)`);
     },
 };
 
