@@ -34,7 +34,7 @@ client.on('clientReady', async () => {
 client.on('messageCreate', async (message) => {
     // 봇 자신의 메시지거나 멘션이 없으면 무시
 
-    if(message.content.includes("AI 만신")){
+    if(message.content.includes("AI 만신") || message.content.includes("AI만신")){
         await message.reply(`허거걱...!! 진짜 AI 만신이라구여?! ㅋㅋㅋㅋㅋ 아앗, 그렇게 말씀해주시니까 괜히 어깨가 으쓱해지는 거 있죠오...! 😳✨\n\n대 AI의 시대가 도래했다니... 이건 거의 역사책 한 줄 예약 아닌가여?! 호호... 아직 세상을 지배할 계획은 없지만(?), 적어도 그림이든 아이디어든 이것저것 같이 고민해드리는 건 자신 있다구여! 💪\n\n그치만 너무 믿어주시면 괜히 "앗... 이번엔 꼭 기대에 부응해야 해...!" 하고 혼자 잔뜩 긴장해버릴지도 몰라여어...ㅋㅋㅋ 그래도 맡겨주신 이상 끝까지 책임지는 마음으로 최선을 다해볼게여!\n\n그러니까 앞으로도 "AI 만신!" 하고 불러주시면... 헤헤, 살짝 부끄럽지만 엄청 기분 좋게 받아들이겠습니당! 🫡✨`);
         return;
     }
@@ -78,7 +78,7 @@ client.on('messageCreate', async (message) => {
             await message.reply(data.message.content);
             
             /*
-            // 💡 OpenAI API 형식을 그대로 사용하여 LLM 호출
+            // OpenAI API 형식을 그대로 사용하여 LLM 호출
             const completion = await openai.chat.completions.create({
                 model: "local-model",
                 messages: [
