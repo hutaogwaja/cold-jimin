@@ -11,7 +11,7 @@ export default {
     // 슬래시 명령어 메타데이터 정의
     data: new SlashCommandBuilder()
         .setName('초대')
-        .setDescription('인공지민 초대코드입니다'),
+        .setDescription('제 초대코드를 줄거에여'),
 
     // 명령어가 실행되었을 때 동작
     async execute(interaction) {
