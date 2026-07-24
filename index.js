@@ -1,7 +1,11 @@
-import { Client, GatewayIntentBits } from 'discord.js';
-import config from './config.json' with { type: 'json' };
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { Client, GatewayIntentBits, Collection } from 'discord.js';
 
-
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf-8'));
 
 const client = new Client({
     intents: [
@@ -59,5 +63,42 @@ client.on('messageCreate', async (message) => {
     }
 });
 
-//client.login(process.env.token);
+
+// 봇 객체에 commands를 담을 Collection 생성
+client.commands = new Collection();
+
+// commands 폴더에서 명령어 파일 불러오기
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+
+for (const file of commandFiles) {
+    const filePath = path.join(commandsPath, file);
+    const commandModule = await import(pathToFileURL(filePath).href);
+    const command = commandModule.default;
+    
+    if ('data' in command && 'execute' in command) {
+        client.commands.set(command.data.name, command);
+    }
+}
+
+// 슬래시 명령어 실행 처리 이벤트
+client.on('interactionCreate', async interaction => {
+    if (!interaction.isChatInputCommand()) return;
+
+    const command = client.commands.get(interaction.commandName);
+    if (!command) return;
+
+    try {
+        await command.execute(interaction);
+    } catch (error) {
+        console.error(error);
+        const errorMessage = { content: '명령어를 실행하는 중 오류가 발생했습니다!', ephemeral: true };
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp(errorMessage);
+        } else {
+            await interaction.reply(errorMessage);
+        }
+    }
+});
+
 client.login(config.token);
