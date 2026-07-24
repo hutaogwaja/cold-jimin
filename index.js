@@ -5,7 +5,10 @@ import { Client, GatewayIntentBits, Collection } from 'discord.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf-8'));
+const SYSTEM_PROMPT = fs.readFileSync(path.join(__dirname, 'prompt.txt'), 'utf-8');
+
 
 const client = new Client({
     intents: [
@@ -19,7 +22,7 @@ const client = new Client({
     ],
 });
 
-client.on('ready', () => {
+client.on('clientReady', () => {
     console.log(`인공지민 가동 준비 완료!`);
 });
 
@@ -39,27 +42,27 @@ client.on('messageCreate', async (message) => {
         if(!prompt){
             await message.reply("인공지민이에요");
         }else if(prompt === "야짤그려줘"){
-            await message.reply("이럴줄 알았어요!! 안 그려줄거에요!");
+            await message.reply("이럴줄 알았어여!! 안 그려줄거에여!");
         }else{
-            await message.reply("뭔가를 답변해야 하는데 아직 학습 안 해서 이 말 밖에 못하네요..");
+            // Ollama API 호출
+            const response = await fetch('http://localhost:11434/api/chat', { // 👈 /api/generate 에서 변경!
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    model: config.OLLAMA_MODEL || 'exaone3.5:7.8b',
+                    messages: [
+                        { role: 'system', content: SYSTEM_PROMPT },
+                        { role: 'user', content: prompt }
+                    ],
+                    stream: false
+                })
+            });
+            const data = await response.json();
+
+            // 디스코드 답변 전송 (글자수 제한 2000자 주의)
+            await message.reply(data.message.content);
         }
-/*
-        // Ollama API 호출
-        const response = await fetch('http://localhost:11434/api/generate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                model: 'gemma2:9b', // 사용할 모델 이름
-                prompt: prompt,
-                stream: false
-            })
-        });
 
-        const data = await response.json();
-
-        // 디스코드 답변 전송 (글자수 제한 2000자 주의)
-        await message.reply(data.response);
-*/
 
     } catch (error) {
         console.error(error);
