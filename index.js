@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import OpenAI from 'openai';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,6 +10,10 @@ const __dirname = path.dirname(__filename);
 const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf-8'));
 const SYSTEM_PROMPT = fs.readFileSync(path.join(__dirname, 'prompt.txt'), 'utf-8');
 
+const openai = new OpenAI({
+    baseURL: 'http://localhost:1234/v1', // LM Studio 로컬 서버 주소
+    apiKey: 'not-needed', // LM Studio는 API Key가 필요 없으므로 아무 문자열이나 넣어도 됩니다.
+});
 
 const client = new Client({
     intents: [
@@ -22,8 +27,18 @@ const client = new Client({
     ],
 });
 
-client.on('clientReady', () => {
+client.on('clientReady', async () => {
     console.log(`인공지민 가동 준비 완료!`);
+
+    try {
+        const completion = await openai.chat.completions.create({
+            model: "local-model", // LM Studio는 모델 이름을 보통 아무거나(local-model 등) 넣어도 켜져 있는 모델로 연결됩니다.
+            messages: [{ role: "user", content: "인공지민? LM Studio에 연결되었는지 확인해줘" }],
+        });
+        console.log(`[AI 연결 성공] LM Studio 응답: ${completion.choices[0].message.content.trim()}`);
+    } catch (error) {
+        console.error('[AI 연결 실패] LM Studio Local Server가 켜져 있는지 확인해주세요!', error.message);
+    }
 });
 
 client.on('messageCreate', async (message) => {
@@ -44,12 +59,15 @@ client.on('messageCreate', async (message) => {
         }else if(prompt === "야짤그려줘"){
             await message.reply("이럴줄 알았어여!! 안 그려줄거에여!");
         }else{
+
+            /*
             // Ollama API 호출
             const response = await fetch('http://localhost:11434/api/chat', { // 👈 /api/generate 에서 변경!
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    model: config.OLLAMA_MODEL || 'exaone3.5:7.8b',
+                    //model: 'lancard/korean-yanolja-eeve',
+                    model: 'cold-jimin',
                     messages: [
                         { role: 'system', content: SYSTEM_PROMPT },
                         { role: 'user', content: prompt }
@@ -59,8 +77,22 @@ client.on('messageCreate', async (message) => {
             });
             const data = await response.json();
 
+            console.log(data);
             // 디스코드 답변 전송 (글자수 제한 2000자 주의)
             await message.reply(data.message.content);
+            */
+
+            // 💡 OpenAI API 형식을 그대로 사용하여 LLM 호출
+            const completion = await openai.chat.completions.create({
+                model: "local-model",
+                messages: [
+                    { role: "system", content: SYSTEM_PROMPT },
+                    { role: "user", content: prompt }
+                ],
+                temperature: 0.7,
+            });
+
+            let aiReply = completion.choices[0].message.content;
         }
 
 
