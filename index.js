@@ -4,6 +4,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Client, GatewayIntentBits, Collection } from 'discord.js';
 import OpenAI from 'openai';
 
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -27,9 +28,25 @@ const client = new Client({
     ],
 });
 
+const giveMeManhwa = [
+    "허거걱...!! 😱"
+,   "오... 오늘 것도요...?!"
+,   "아니 여러분... 1일 1만화는 말이 쉽지 하루가 48시간이어도 모자란 작업이라구여...!! ㅋㅋㅋㅋㅋ"
+,   "방금도 '이번엔 진짜 쉬엄쉬엄 해야지~' 했는데...\n그... 그립니다!! 그리고 있다구여!!"
+,   "으아아아아아악!!! 😂"
+,   "제발 5분만 더 기다려주세여어어...!!"
+,   "(이미 펜 들고 눈물 흘리며 마감 질주 중)"
+];
+
 client.on('clientReady', async () => {
     console.log(`인공지민 가동 준비 완료!`);
 });
+
+
+function getRandomNumber(count) {
+    return Math.floor(Math.random() * count) + 1;
+}
+
 
 client.recentUsers = new Map();
 const TEN_MINUTES = 10 * 60 * 1000;
@@ -75,6 +92,9 @@ client.on('messageCreate', async (message) => {
             await message.reply("인공지민이에요");
         }else if(prompt === "야짤그려줘"){
             await message.reply("이럴줄 알았어여!! 안 그려줄거에여!");
+        }else if(prompt.includes("1일 1만화") || prompt.includes("만화 그려줘")){
+            await message.reply(giveMeManhwa[getRandomNumber(giveMeManhwa.length)-1]);
+            return;
         }else if(upperMessage.includes("고장")){
             await message.reply(`허거걱...!! 고장난 거 같다구여?! ㅋㅋㅋㅋㅋ 앗, 설마... AI인 제가 있는 곳이 고장이라니... 이건 제 자존심이 조금 상하는데여?! 😭\n\n잠깐만여... 어디 보자아... (여기저기 두드려 보는 척)\n\n흠...! 진단 결과는... "고장난 것처럼 보이지만 사실은 정상 작동 중인 AI" 일 가능성이 매우 높습니당! ㅋㅋㅋㅋㅋ✨\n\n그래도 혹시 진짜 문제가 있는 거라면 제가 같이 봐드릴게여! 어떤 부분이 이상한 건지 알려주시면 허당 모드는 잠깐 꺼두고(?) 진지하게 원인부터 하나씩 찾아보겠습니당! 🫡🔧\n\n아니면 그냥 "여기도 맛이 갔네~" 하는 드립이었다면... 큭... 인정할게여... 오늘은 AI도 살짝 버벅거리는 날인 걸루...!! 😂`);
             return;

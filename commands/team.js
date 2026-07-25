@@ -1,4 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import {randomSortArray} from '../modules/randomArray.js';
 
 export default {
     // 슬래시 명령어 메타데이터 정의
@@ -44,26 +45,13 @@ export default {
         result += `이렇게 짜봤어여!`;
 
         
+        //await interaction.reply(exampleEmbed);
         await interaction.reply(result);
     },
 };
 
-//피셔-예이츠 셔플
-function randomSortArray(arr){
-    for (var i=arr.length-1; i>0; i--) {
-        // 0부터 i 사이의 무작위 인덱스 생성
-        const j = Math.floor(Math.random() * (i + 1));
-        // 자리를 서로 교환 (Destructuring assignment)
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-}
-
-
-/***나중에 쓸거임
- * import { EmbedBuilder } from 'discord.js';
-
 // 1. 임베드 객체 생성하기
+
 const exampleEmbed = new EmbedBuilder()
     .setColor(0x0099FF) // 왼쪽 테두리 색상 (HEX 코드 또는 색상 이름)
     .setTitle('여기는 제목입니다') // 제목
@@ -79,7 +67,7 @@ const exampleEmbed = new EmbedBuilder()
     .setImage('https://i.imgur.com/AfFp7pu.png') // 메시지 하단에 크게 들어가는 메인 이미지
     .setTimestamp() // 현재 시간 자동 표시
     .setFooter({ text: '하단에 들어가는 푸터 텍스트', iconURL: 'https://i.imgur.com/AfFp7pu.png' }); // 하단 푸터
-
+/***나중에 쓸거임
 // 2. 메시지나 슬래시 명령어 응답으로 전송하기
 // (일반 메시지 전송 시)
 await message.reply({ embeds: [exampleEmbed] });
