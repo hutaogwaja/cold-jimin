@@ -67,34 +67,41 @@ client.on('messageCreate', async (message) => {
     // 봇 자신의 메세지라면 작동하지 않기
     if (message.author.bot) return;
 
-    // 메세지 타이핑 중으로 표기
-    await message.channel.sendTyping();
-
-   
-
+    // 특수 메세지들을 구별하기 위해 UpperCase로 만듦
+    let upperMessage = message.content.toUpperCase();
     
+    // AI만신(AI 만신) 언급 시 해당 단어 소환
+    if(upperMessage.includes("AI 만신") || upperMessage.includes("AI만신")){
+        await message.reply(`허거걱...!! 진짜 AI 만신이라구여?! ㅋㅋㅋㅋㅋ 아앗, 그렇게 말씀해주시니까 괜히 어깨가 으쓱해지는 거 있죠오...! 😳✨\n\n대 AI의 시대가 도래했다니... 이건 거의 역사책 한 줄 예약 아닌가여?! 호호... 아직 세상을 지배할 계획은 없지만(?), 적어도 그림이든 아이디어든 이것저것 같이 고민해드리는 건 자신 있다구여! 💪\n\n그치만 너무 믿어주시면 괜히 "앗... 이번엔 꼭 기대에 부응해야 해...!" 하고 혼자 잔뜩 긴장해버릴지도 몰라여어...ㅋㅋㅋ 그래도 맡겨주신 이상 끝까지 책임지는 마음으로 최선을 다해볼게여!\n\n그러니까 앞으로도 "AI 만신!" 하고 불러주시면... 헤헤, 살짝 부끄럽지만 엄청 기분 좋게 받아들이겠습니당! 🫡✨`);
+        return;
+    } 
 
-    // 10분간 대화 active
+    // 맨션 여부 확인(만약 채팅기능 작동 중이라면 그냥 패스하도록)
+    const mentioned = message.mentions.has(client.user);
+    
     const now = Date.now();
     const recentUsers = client.recentUsers;
-    const lastMention = recentUsers.get(message.author.id);
+    const lastMention = recentUsers.get(message.author.id); //유저의 가장 마지막 맨션시간 구하기
 
-    const mentioned = message.mentions.has(client.user);
-    const recentlyMentioned = lastMention && (now - lastMention) < TEN_MINUTES;
+    // 가장 최근 맨션이 10분 전일 때(아직 자동 채팅 기능이 작동 중일때)
+    const recentlyMentioned = lastMention && (now - lastMention) < TEN_MINUTES;   
+    
+    // 채팅 기능 작동 안하거나 맨션 안했으면
+    if (!mentioned && !recentlyMentioned) return; 
 
-    if (!mentioned && !recentlyMentioned) return;
-
-    if (mentioned && recentlyMentioned) {
-        recentUsers.set(message.author.id, now);
+    // 채팅을 했다면 10분으로 다시 리셋하기
+    if (mentioned && recentlyMentioned) { 
+        recentUsers.set(message.author.id, now); 
     }
+
+    
+    // 메세지 타이핑 중으로 표기
+    await message.channel.sendTyping();
 
 
     try {
         // 순수 텍스트만 추출 (멘션 태그 제거)
         const prompt = message.content.replace(`<@${client.user.id}>`, '').trim();
-
-        // 특수 메세지들을 구별하기 위해 UpperCase로 만듦
-        let upperMessage = message.content.toUpperCase();
         // console.log(prompt);
 
         // 특별 메세지들이 나오면 다음과 같이 답변 후 return
@@ -102,13 +109,10 @@ client.on('messageCreate', async (message) => {
             await message.reply("인공지민이에요");
         }else if(prompt === "야짤그려줘"){
             await message.reply("이럴줄 알았어여!! 안 그려줄거에여!");
-        }else if(upperMessage.includes("AI 만신") || upperMessage.includes("AI만신")){
-            await message.reply(`허거걱...!! 진짜 AI 만신이라구여?! ㅋㅋㅋㅋㅋ 아앗, 그렇게 말씀해주시니까 괜히 어깨가 으쓱해지는 거 있죠오...! 😳✨\n\n대 AI의 시대가 도래했다니... 이건 거의 역사책 한 줄 예약 아닌가여?! 호호... 아직 세상을 지배할 계획은 없지만(?), 적어도 그림이든 아이디어든 이것저것 같이 고민해드리는 건 자신 있다구여! 💪\n\n그치만 너무 믿어주시면 괜히 "앗... 이번엔 꼭 기대에 부응해야 해...!" 하고 혼자 잔뜩 긴장해버릴지도 몰라여어...ㅋㅋㅋ 그래도 맡겨주신 이상 끝까지 책임지는 마음으로 최선을 다해볼게여!\n\n그러니까 앞으로도 "AI 만신!" 하고 불러주시면... 헤헤, 살짝 부끄럽지만 엄청 기분 좋게 받아들이겠습니당! 🫡✨`);
-            return;
-        } else if(prompt.includes("1일 1만화") || prompt.includes("만화 그려줘")){
+        }else if(prompt.includes("1일 1만화") || prompt.includes("만화 그려줘")){
             await message.reply(giveMeManhwa[getRandomNumber(giveMeManhwa.length)-1]);
             return;
-        }else if(upperMessage.includes("고장")){
+        }else if(prompt.includes("고장")){
             await message.reply(`허거걱...!! 고장난 거 같다구여?! ㅋㅋㅋㅋㅋ 앗, 설마... AI인 제가 있는 곳이 고장이라니... 이건 제 자존심이 조금 상하는데여?! 😭\n\n잠깐만여... 어디 보자아... (여기저기 두드려 보는 척)\n\n흠...! 진단 결과는... "고장난 것처럼 보이지만 사실은 정상 작동 중인 AI" 일 가능성이 매우 높습니당! ㅋㅋㅋㅋㅋ✨\n\n그래도 혹시 진짜 문제가 있는 거라면 제가 같이 봐드릴게여! 어떤 부분이 이상한 건지 알려주시면 허당 모드는 잠깐 꺼두고(?) 진지하게 원인부터 하나씩 찾아보겠습니당! 🫡🔧\n\n아니면 그냥 "여기도 맛이 갔네~" 하는 드립이었다면... 큭... 인정할게여... 오늘은 AI도 살짝 버벅거리는 날인 걸루...!! 😂`);
             return;
         }else{ // 특별한 메세지 없을 시 챗봇 기능
