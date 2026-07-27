@@ -52,7 +52,7 @@ function getRandomNumber(count) {
 }
 
 // 설정한 분만큼 ms를 계산해서 출력하는 함수
-funciton getMilliseconds(miniute){
+function getMilliseconds(miniute){
     return miniute * 60 * 1000;
 }
 
