@@ -46,8 +46,19 @@ function getMilliseconds(miniute){
     return miniute * 60 * 1000;
 }
 
-function divideEmoji(){
+async function divideEmoji(line, message){
+    // 이모지 분기 처리 패턴 체크
+    const match = line.match(/^(.*?)(<a?:\w+:\d+>|(?:\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*)+)\s*$/u);
 
+    if (match) {
+        const text = match[1].trimEnd();
+        const emoji = match[2];
+
+        if (text) await message.channel.send(text);
+        await message.channel.send(emoji);
+    } else {
+        await message.channel.send(line);
+    }
 }
 
 //봇이 준비가 된다면?(서버가 켜진다면)
@@ -116,52 +127,29 @@ client.on('messageCreate', async (message) => {
         }else{ // 특별한 메세지 없을 시 챗봇 기능
             
             const start = performance.now();
-
+            
+            /*
             // AI 사용 안할 시에
             await message.channel.send(`저는 지금 챗봇 기능아 안되여... 미아내여...`);
-
-            /*
+            */
+            
             // openAI API 사용시
             await useOpenAI(prompt, SYSTEM_PROMPT, async (line) => {
                 console.log(line);
-                // 빈 줄은 무시하고 싶다면 활성화 (선택 사항)
-                if (!line.trim()) return;
                 
                 await message.channel.send(line);
-
                 //이모지랑 채팅 분활하는 코드 
-                // 이모지 분기 처리 패턴 체크
-                const match = line.match(/^(.*?)(<a?:\w+:\d+>|(?:\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*)+)\s*$/u);
-
-                if (match) {
-                    const text = match[1].trimEnd();
-                    const emoji = match[2];
-
-                    if (text) await message.channel.send(text);
-                    await message.channel.send(emoji);
-                } else {
-                    await message.channel.send(line);
-                }
+                //await divideEmoji(line, message);
             });
-            */
 
             /*
             // Ollama AI 사용 시
             await useOllamaAI(prompt, SYSTEM_PROMPT, async (line) => {
                 console.log(line);
 
-                // 이모지 분기 처리 로직
-                const match = line.match(/^(.*?)(<a?:\w+:\d+>|(?:\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*)+)\s*$/u);
-                
-                if (match) {
-                    const text = match[1].trimEnd();
-                    const emoji = match[2];
-
-                    if (text) await message.channel.send(text);
-                    await message.channel.send(emoji);
-                } else {
-                    await message.channel.send(line);
-                }
+                await message.channel.send(line);
+                //이모지랑 채팅 분활하는 코드 
+                //await divideEmoji(line, message);
             });
             */
            
@@ -180,7 +168,7 @@ client.on('messageCreate', async (message) => {
 
     } catch (error) {
         console.error(error);
-        await message.reply('으아아아아!!! 오류가 발생했어여... 미아내여... 😭');
+        await message.reply(`으아아아아!!! 오류가 발생했어여... 미아내여... 😭\n 대충 에러가..\n\n${error}`);
     }
 });
 
