@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "pm2 start index.js --name 'cold-jimin'"
+    "start": "pm2 start index.js --name \"cold-jimin\" --update-env",
+    "kill": "pm2 delete cold-jimin"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +15,7 @@
   "dependencies": {
     "discord.js": "^14.27.0",
     "dotenv": "^17.4.2",
+    "mysql2": "^3.23.2",
     "openai": "^6.49.0"
   }
 }
