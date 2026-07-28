@@ -11,8 +11,6 @@ const openai = new OpenAI({
  * OpenAI 호환 로컬 AI로부터 응답을 줄(Line) 단위 스트리밍으로 받는 함수
  */
 export async function useOpenAI(prompt, systemPrompt, onLine) {
-
-    console.log(openai.baseURL)
     // 1. stream: true 옵션 추가
     const stream = await openai.chat.completions.create({
         model: "local-model",
