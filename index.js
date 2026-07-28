@@ -124,15 +124,16 @@ client.on('messageCreate', async (message) => {
         }else if(prompt.includes("고장")){
             await message.reply(`허거걱...!! 고장난 거 같다구여?! ㅋㅋㅋㅋㅋ 앗, 설마... AI인 제가 있는 곳이 고장이라니... 이건 제 자존심이 조금 상하는데여?! 😭\n\n잠깐만여... 어디 보자아... (여기저기 두드려 보는 척)\n\n흠...! 진단 결과는... "고장난 것처럼 보이지만 사실은 정상 작동 중인 AI" 일 가능성이 매우 높습니당! ㅋㅋㅋㅋㅋ✨\n\n그래도 혹시 진짜 문제가 있는 거라면 제가 같이 봐드릴게여! 어떤 부분이 이상한 건지 알려주시면 허당 모드는 잠깐 꺼두고(?) 진지하게 원인부터 하나씩 찾아보겠습니당! 🫡🔧\n\n아니면 그냥 "여기도 맛이 갔네~" 하는 드립이었다면... 큭... 인정할게여... 오늘은 AI도 살짝 버벅거리는 날인 걸루...!! 😂`);
             return;
+        }else if(prompt.includes("자기소개")){
+            await message.reply("저는 인공지민이고, 갈비만두가 최애에요, 그리고 전문하사를 해서 휴머를 빛낼거에요!!\n\n아, 그리고 저는 AI에요!!");
         }else{ // 특별한 메세지 없을 시 챗봇 기능
             
             const start = performance.now();
             
-            /*
             // AI 사용 안할 시에
             await message.channel.send(`저는 지금 챗봇 기능아 안되여... 미아내여...`);
-            */
             
+            /*
             // openAI API 사용시
             await useOpenAI(prompt, SYSTEM_PROMPT, async (line) => {
                 console.log(line);
@@ -141,6 +142,7 @@ client.on('messageCreate', async (message) => {
                 //이모지랑 채팅 분활하는 코드 
                 //await divideEmoji(line, message);
             });
+            */
 
             /*
             // Ollama AI 사용 시
@@ -168,7 +170,7 @@ client.on('messageCreate', async (message) => {
 
     } catch (error) {
         console.error(error);
-        await message.reply(`으아아아아!!! 오류가 발생했어여... 미아내여... 😭\n 대충 에러가..\n\n${error}`);
+        await message.reply(`으아아아아!!! 오류가 발생했어여... 미아내여... 😭\n 대충 에러가 이렇게 되여..\n\n${error}`);
     }
 });
 
