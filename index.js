@@ -2,8 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Client, GatewayIntentBits, Collection } from 'discord.js';
-import OpenAI from 'openai';
-
+import { useOllamaAI } from './modules/useOllamaAI.js';
+import { useOpenAI } from './modules/useOpenAI.js';
 
 // 프롬프트 파일과 config 파일 가져오기
 const __filename = fileURLToPath(import.meta.url);
@@ -11,12 +11,6 @@ const __dirname = path.dirname(__filename);
 
 const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf-8'));
 const SYSTEM_PROMPT = fs.readFileSync(path.join(__dirname, 'prompt.txt'), 'utf-8');
-
-// openAI API와 연동(로컬)
-const openai = new OpenAI({
-    baseURL: 'http://localhost:1234/v1', // LM Studio 로컬 서버 주소
-    apiKey: 'not-needed', // LM Studio는 API Key가 필요 없으므로 아무 문자열이나 넣어도 됩니다.
-});
 
 // 디스코드 클라이언트와 연동
 const client = new Client({
@@ -41,10 +35,6 @@ const giveMeManhwa = [
 ,   "(이미 펜 들고 눈물 흘리며 마감 질주 중)"
 ];
 
-//봇이 준비가 된다면?(서버가 켜진다면)
-client.on('clientReady', async () => {
-    console.log(`인공지민 가동 준비 완료!`);
-});
 
 // 랜덤 번호 가져오는 함수
 function getRandomNumber(count) {
@@ -56,6 +46,14 @@ function getMilliseconds(miniute){
     return miniute * 60 * 1000;
 }
 
+function divideEmoji(){
+
+}
+
+//봇이 준비가 된다면?(서버가 켜진다면)
+client.on('clientReady', async () => {
+    console.log(`인공지민 가동 준비 완료!`);
+});
 
 // 최근에 기록된 유저들 저장하는 MAP
 client.recentUsers = new Map();
@@ -118,122 +116,74 @@ client.on('messageCreate', async (message) => {
         }else{ // 특별한 메세지 없을 시 챗봇 기능
             
             const start = performance.now();
-            // const result = stoppedUsingAI(); //짭지민 전용(AI챗봇 기능 무?력화)
-            // const result = useOllamaAI(prompt); // OllamaAI 사용
-            // const result = useOpenAI(prompt); // OpenAI 사용
-            
-            //await message.reply(result);
-            //return;
-           
-            // Ollama API 호출
-            const response = await fetch('http://localhost:11434/api/chat', { 
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    model: 'qwen3:8b',
-                    messages: [
-                        { role: 'system', content: SYSTEM_PROMPT },
-                        { role: 'user', content: prompt }
-                    ],
-                    stream: true,
-                    options: {
-                        num_gpu: 999,
-                        num_ctx: 4096,
-                        temperature: 0.7
-                    }
-                })
-            });
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
 
-            let jsonBuffer = "";
-            let textBuffer = "";
+            // AI 사용 안할 시에
+            await message.channel.send(`저는 지금 챗봇 기능아 안되여... 미아내여...`);
 
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
+            /*
+            // openAI API 사용시
+            await useOpenAI(prompt, SYSTEM_PROMPT, async (line) => {
+                console.log(line);
+                // 빈 줄은 무시하고 싶다면 활성화 (선택 사항)
+                if (!line.trim()) return;
+                
+                await message.channel.send(line);
 
-                jsonBuffer += decoder.decode(value, { stream: true });
+                //이모지랑 채팅 분활하는 코드 
+                // 이모지 분기 처리 패턴 체크
+                const match = line.match(/^(.*?)(<a?:\w+:\d+>|(?:\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*)+)\s*$/u);
 
-                const lines = jsonBuffer.split("\n");
-                jsonBuffer = lines.pop(); // keep incomplete JSON
+                if (match) {
+                    const text = match[1].trimEnd();
+                    const emoji = match[2];
 
-                for (const line of lines) {
-                    if (!line.trim()) continue;
-
-                    const chunk = JSON.parse(line);
-
-                    if (chunk.message?.content) {
-                        textBuffer += chunk.message.content;
-
-                        let idx;
-                        while ((idx = textBuffer.indexOf("\n")) !== -1) {
-                            const line = textBuffer.slice(0, idx)
-                            console.log(line);
-                            const match = line.match(/^(.*?)(<a?:\w+:\d+>|(?:\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*)+)\s*$/u);
-                            if (match) {
-                                const text = match[1].trimEnd();
-                                const emoji = match[2];
-
-                                if (text) await message.channel.send(text);
-                                await message.channel.send(emoji);
-                            } else {
-                                await message.channel.send(line);
-                            }
-                            textBuffer = textBuffer.slice(idx + 1);
-                        }
-                    }
-
-                    if (chunk.done) {
-                        // Print any remaining text
-                        if (textBuffer.length) {
-                            console.log(textBuffer);
-                            await message.channel.send(textBuffer);
-                            textBuffer = "";
-                        }
-                    }
+                    if (text) await message.channel.send(text);
+                    await message.channel.send(emoji);
+                } else {
+                    await message.channel.send(line);
                 }
-            }
+            });
+            */
+
+            /*
+            // Ollama AI 사용 시
+            await useOllamaAI(prompt, SYSTEM_PROMPT, async (line) => {
+                console.log(line);
+
+                // 이모지 분기 처리 로직
+                const match = line.match(/^(.*?)(<a?:\w+:\d+>|(?:\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*)+)\s*$/u);
+                
+                if (match) {
+                    const text = match[1].trimEnd();
+                    const emoji = match[2];
+
+                    if (text) await message.channel.send(text);
+                    await message.channel.send(emoji);
+                } else {
+                    await message.channel.send(line);
+                }
+            });
+            */
+           
+            
 
             //console.log(data);
             
 
             
+            // 답변까지 걸린 시간 측정하기
             const elapsed = performance.now() - start;
             console.log(`Done! - took:${(elapsed / 1000).toFixed(2)}s`)
-            // 답변까지 걸린 시간 측정하기
+            
+            return;
         }
 
     } catch (error) {
         console.error(error);
-        await message.reply('AI 모델과 통신 중 오류가 발생했습니다.');
+        await message.reply('으아아아아!!! 오류가 발생했어여... 미아내여... 😭');
     }
 });
-// =================================== 까지가 챗봇 ==========================================
 
-// 챗봇 기능 꺼놨을 때
-function stoppedUsingAI(){
-    return `잠시 챗봇 기능 꺼져있어여... 미아내여...`;
-}
-
-// OllamaAI 사용하여 챗봇 기능 사용할 때
-function useOllamaAI(prompt){
-
-}
-
-// openAI API(혹은 LLM Studio쪽) 챗봇 기능 사용할 때
-function useOpenAI(prompt){
-    const completion = await openai.chat.completions.create({
-        model: "local-model",
-        messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: prompt }
-        ],
-        temperature: 0.7,
-    });
-    let choiceNumber = getRandomNumber(completion.choices.length-1);
-    return ompletion.choices[choiceNumber].message.content;
-}
 
 
 // 봇 객체에 commands를 담을 Collection 생성
