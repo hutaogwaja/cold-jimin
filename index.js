@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import mysql from 'mysql2/promise';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Client, GatewayIntentBits, Collection } from 'discord.js';
 import { useOllamaAI } from './modules/useOllamaAI.js';
@@ -23,6 +24,17 @@ const client = new Client({
         GatewayIntentBits.DirectMessages,
         GatewayIntentBits.DirectMessageTyping,
     ],
+});
+
+const pool = mysql.createPool({
+    host: config.dataBase.host,
+    user: config.dataBase.user,
+    password: config.dataBase.password,
+    database: config.dataBase.name,
+    port: config.dataBase.port,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
 const giveMeManhwa = [
@@ -63,7 +75,31 @@ async function divideEmoji(line, message){
 
 //봇이 준비가 된다면?(서버가 켜진다면)
 client.on('clientReady', async () => {
+    
+    const channelId = config.LogChannel;
+    let DatabaseStatus = "기능 정지";
+
     console.log(`인공지민 가동 준비 완료!`);
+
+    // DB 연결
+    try {
+        const [rows] = await pool.query('SELECT 1 + 1 AS solution');
+        console.log(`[DB 연결 성공] 테스트 쿼리 결과에여!: ${rows[0].solution}`);
+        DatabaseStatus = "연결 성공";
+    } catch (error) {
+        console.error('[DB 연결 실패] MySQL 설정이나 서버 상태를 확인해줘여!!', error.message);
+        DatabaseStatus = "연결 실패";
+    }
+
+    // 지정된 채널에 상태값 보내기
+    try {
+        const channel = await client.channels.fetch(channelId);
+        if (channel) {
+            await channel.send(`인공지민 가동완료!!\n\n[인공지민 상태값]\n- DB 상태: ${DatabaseStatus}\n- 챗봇 상태: ${config.chatbotSettings.chatBotType}\n- 이모지 분기 처리: ${config.chatbotSettings.divideEmoji}`);
+        }
+    } catch (error) {
+        console.error('무언가 문제가 발생했어여!!:', error);
+    }
 });
 
 // 최근에 기록된 유저들 저장하는 MAP
@@ -102,11 +138,9 @@ client.on('messageCreate', async (message) => {
     if (mentioned && recentlyMentioned) { 
         recentUsers.set(message.author.id, now); 
     }
-
     
     // 메세지 타이핑 중으로 표기
     await message.channel.sendTyping();
-
 
     try {
         // 순수 텍스트만 추출 (멘션 태그 제거)
@@ -125,42 +159,45 @@ client.on('messageCreate', async (message) => {
             await message.reply(`허거걱...!! 고장난 거 같다구여?! ㅋㅋㅋㅋㅋ 앗, 설마... AI인 제가 있는 곳이 고장이라니... 이건 제 자존심이 조금 상하는데여?! 😭\n\n잠깐만여... 어디 보자아... (여기저기 두드려 보는 척)\n\n흠...! 진단 결과는... "고장난 것처럼 보이지만 사실은 정상 작동 중인 AI" 일 가능성이 매우 높습니당! ㅋㅋㅋㅋㅋ✨\n\n그래도 혹시 진짜 문제가 있는 거라면 제가 같이 봐드릴게여! 어떤 부분이 이상한 건지 알려주시면 허당 모드는 잠깐 꺼두고(?) 진지하게 원인부터 하나씩 찾아보겠습니당! 🫡🔧\n\n아니면 그냥 "여기도 맛이 갔네~" 하는 드립이었다면... 큭... 인정할게여... 오늘은 AI도 살짝 버벅거리는 날인 걸루...!! 😂`);
             return;
         }else if(prompt.includes("자기소개")){
-            await message.reply("저는 인공지민이고, 갈비만두가 최애에요, 그리고 전문하사를 해서 휴머를 빛낼거에요!!\n\n아, 그리고 저는 AI에요!!");
+            await message.reply("저는 인공지민이고, 갈비만두가 최애에요\n그리고 전문하사를 해서 휴머를 빛낼거에요!!\n아, 그리고 저는 AI에요!!");
         }else{ // 특별한 메세지 없을 시 챗봇 기능
-            
             const start = performance.now();
-            
-            // AI 사용 안할 시에
-            await message.channel.send(`저는 지금 챗봇 기능아 안되여... 미아내여...`);
-            
-            /*
-            // openAI API 사용시
-            await useOpenAI(prompt, SYSTEM_PROMPT, async (line) => {
-                console.log(line);
-                
-                await message.channel.send(line);
-                //이모지랑 채팅 분활하는 코드 
-                //await divideEmoji(line, message);
-            });
-            */
 
-            /*
-            // Ollama AI 사용 시
-            await useOllamaAI(prompt, SYSTEM_PROMPT, async (line) => {
-                console.log(line);
-
-                await message.channel.send(line);
-                //이모지랑 채팅 분활하는 코드 
-                //await divideEmoji(line, message);
-            });
-            */
-           
+            await message.channel.send(`현재 상태값은 ${config.chatbotSettings.chatBotType} 이에여!!`);
             
-
-            //console.log(data);
             
+            // config값에 따라 챗봇 여부 결정
+            switch(config.chatbotSettings.chatBotType){
+                case "N": // AI 사용 안할 시에
+                    await message.reply(`저는 지금 챗봇 기능아 안되여... 미아내여...`);
+                    return;
+                case "openAI" : // openAI API 사용시
+                    await useOpenAI(prompt, SYSTEM_PROMPT, async (line) => {
+                        console.log(line);
+                        
+                        if(config.chatbotSettings.divideEmoji === "Y"){
+                            await divideEmoji(line, message);
+                        }else{
+                            await message.channel.send(line);
+                        }
+                    });
+                    break;
+                case "ollamaAI" : // Ollama AI 사용 시
+                    await useOllamaAI(prompt, SYSTEM_PROMPT, async (line) => {
+                        console.log(line);
+                        
+                        if(config.chatbotSettings.divideEmoji === "Y"){
+                            await divideEmoji(line, message);
+                        }else{
+                            await message.channel.send(line);
+                        }
+                    });
+                    break;
+                default:
+                    await message.reply(`설정이 잘못된거 같아여!!`);
+                    return;
+            }
 
-            
             // 답변까지 걸린 시간 측정하기
             const elapsed = performance.now() - start;
             console.log(`Done! - took:${(elapsed / 1000).toFixed(2)}s`)
