@@ -125,7 +125,7 @@ client.recentUsers = new Map();
 const TEN_MINUTES = 10 * 60 * 1000;
 
 async function getSpecificComment(prompt, message) {
-    const [rows] = await pool.query(`SELECT easteregg_content AS easterEggContent FROM EasterEgg WHERE 1=1 AND INSTR(?, easteregg_input) > 0 ORDER BY rand()`, [prompt]);
+    const [rows] = await pool.query(`SELECT easteregg_content AS easterEggContent FROM EasterEgg WHERE 1=1 AND bot_type = 'cold-jimin' AND IF(easteregg_pinned = '1', easteregg_input = ?, INSTR(?, easteregg_input) > 0) ORDER BY rand()`, [prompt, prompt]);
     if (rows.length > 0) {
         console.log(`${rows[0].easterEggContent.replace(/\\n/g, '\n')}`);
         return rows[0].easterEggContent.replace(/\\n/g, '\n');
