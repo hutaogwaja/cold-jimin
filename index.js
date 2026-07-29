@@ -96,10 +96,10 @@ client.recentUsers = new Map();
 const TEN_MINUTES = 10 * 60 * 1000;
 
 async function getSpecificComment(prompt, message) {
-    const [rows] = await pool.query(`SELECT REPLACE(easteregg_content, '\\n', CHAR(10)) AS easterEggContent FROM EasterEgg WHERE 1=1 AND INSTR(?, easteregg_input) > 0 ORDER BY rand()`, [prompt]);
-    console.log(rows[0].easterEggContent);
+    const [rows] = await pool.query(`SELECT easteregg_content AS easterEggContent FROM EasterEgg WHERE 1=1 AND INSTR(?, easteregg_input) > 0 ORDER BY rand()`, [prompt]);
+    console.log(`${rows[0].easterEggContent.replace(/\\n/g, '\n')}`);
     if (rows.length > 0) {
-        return rows[0].easterEggContent;
+        return rows[0].easterEggContent.replace(/\\n/g, '\n');
     }
 
     return false; 
