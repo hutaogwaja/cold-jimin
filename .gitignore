@@ -4,3 +4,4 @@ config.json
 config_nouse.json
 prompt.txt
 Modelfile
+sqlQueryTest.sql
