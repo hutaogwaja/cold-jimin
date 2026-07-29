@@ -37,17 +37,6 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-const giveMeManhwa = [
-    "허거걱...!! 😱"
-,   "오... 오늘 것도요...?!"
-,   "아니 여러분... 1일 1만화는 말이 쉽지 하루가 48시간이어도 모자란 작업이라구여...!! ㅋㅋㅋㅋㅋ"
-,   "방금도 '이번엔 진짜 쉬엄쉬엄 해야지~' 했는데...\n그... 그립니다!! 그리고 있다구여!!"
-,   "으아아아아아악!!! 😂"
-,   "제발 5분만 더 기다려주세여어어...!!"
-,   "(이미 펜 들고 눈물 흘리며 마감 질주 중)"
-];
-
-
 // 랜덤 번호 가져오는 함수
 function getRandomNumber(count) {
     return Math.floor(Math.random() * count) + 1;
@@ -95,7 +84,7 @@ client.on('clientReady', async () => {
     try {
         const channel = await client.channels.fetch(channelId);
         if (channel) {
-            await channel.send(`인공지민 가동완료!!\n\n[인공지민 상태값]\n- DB 상태: ${DatabaseStatus}\n- 챗봇 상태: ${config.chatbotSettings.chatBotType}\n- 이모지 분기 처리: ${config.chatbotSettings.divideEmoji}`);
+            await channel.send(`**인공지민 가동완료!!**\n\n[인공지민 상태값]\n- DB 상태: ${DatabaseStatus}\n- 챗봇 상태: ${config.chatbotSettings.chatBotType}\n- 이모지 분기 처리: ${config.chatbotSettings.divideEmoji}`);
         }
     } catch (error) {
         console.error('무언가 문제가 발생했어여!!:', error);
@@ -105,6 +94,15 @@ client.on('clientReady', async () => {
 // 최근에 기록된 유저들 저장하는 MAP
 client.recentUsers = new Map();
 const TEN_MINUTES = 10 * 60 * 1000;
+
+async function getSpecificComment(prompt, message) {
+    const [rows] = await pool.query('SELECT easteregg_content AS easterEggContent FROM EasterEgg WHERE 1=1 AND INSTR(?, easteregg_input) > 0 ORDER BY rand()', [prompt]);
+    if (rows.length > 0) {
+        return rows[0].easterEggContent;
+    }
+
+    return false; 
+}
 
 //메세지를 받는 이벤트
 client.on('messageCreate', async (message) => {
@@ -145,27 +143,20 @@ client.on('messageCreate', async (message) => {
     try {
         // 순수 텍스트만 추출 (멘션 태그 제거)
         const prompt = message.content.replace(`<@${client.user.id}>`, '').trim();
+        const promptNoSpace = prompt.replace(/\s/g, ''); 
+        
+        const specificComment = await getSpecificComment(promptNoSpace);
         // console.log(prompt);
 
         // 특별 메세지들이 나오면 다음과 같이 답변 후 return
         if(!prompt){
             await message.reply("인공지민이에요");
-        }else if(prompt === "야짤그려줘"){
-            await message.reply("이럴줄 알았어여!! 안 그려줄거에여!");
-        }else if(prompt.includes("1일 1만화") || prompt.includes("만화 그려줘")){
-            await message.reply(giveMeManhwa[getRandomNumber(giveMeManhwa.length)-1]);
+        }else if(specificComment){
+            await message.reply(specificComment, message);
             return;
-        }else if(prompt.includes("고장")){
-            await message.reply(`허거걱...!! 고장난 거 같다구여?! ㅋㅋㅋㅋㅋ 앗, 설마... AI인 제가 있는 곳이 고장이라니... 이건 제 자존심이 조금 상하는데여?! 😭\n\n잠깐만여... 어디 보자아... (여기저기 두드려 보는 척)\n\n흠...! 진단 결과는... "고장난 것처럼 보이지만 사실은 정상 작동 중인 AI" 일 가능성이 매우 높습니당! ㅋㅋㅋㅋㅋ✨\n\n그래도 혹시 진짜 문제가 있는 거라면 제가 같이 봐드릴게여! 어떤 부분이 이상한 건지 알려주시면 허당 모드는 잠깐 꺼두고(?) 진지하게 원인부터 하나씩 찾아보겠습니당! 🫡🔧\n\n아니면 그냥 "여기도 맛이 갔네~" 하는 드립이었다면... 큭... 인정할게여... 오늘은 AI도 살짝 버벅거리는 날인 걸루...!! 😂`);
-            return;
-        }else if(prompt.includes("자기소개")){
-            await message.reply("저는 인공지민이고, 갈비만두가 최애에요\n그리고 전문하사를 해서 휴머를 빛낼거에요!!\n아, 그리고 저는 AI에요!!");
         }else{ // 특별한 메세지 없을 시 챗봇 기능
             const start = performance.now();
 
-            await message.channel.send(`현재 상태값은 ${config.chatbotSettings.chatBotType} 이에여!!`);
-            
-            
             // config값에 따라 챗봇 여부 결정
             switch(config.chatbotSettings.chatBotType){
                 case "N": // AI 사용 안할 시에
