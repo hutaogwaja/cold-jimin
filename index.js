@@ -84,7 +84,7 @@ client.on('clientReady', async () => {
     try {
         const channel = await client.channels.fetch(channelId);
         if (channel) {
-            await channel.send(`**인공지민 가동완료!!**\n\n[인공지민 상태값]\n- DB 상태: ${DatabaseStatus}\n- 챗봇 상태: ${config.chatbotSettings.chatBotType}\n- 이모지 분기 처리: ${config.chatbotSettings.divideEmoji}`);
+            await channel.send(`# 인공지민 가동완료!!\n\n[인공지민 상태값]\n- DB 상태: ${DatabaseStatus}\n- 챗봇 상태: ${config.chatbotSettings.chatBotType}\n- 이모지 분기 처리: ${config.chatbotSettings.divideEmoji}`);
         }
     } catch (error) {
         console.error('무언가 문제가 발생했어여!!:', error);
@@ -96,9 +96,10 @@ client.recentUsers = new Map();
 const TEN_MINUTES = 10 * 60 * 1000;
 
 async function getSpecificComment(prompt, message) {
-    const [rows] = await pool.query('SELECT easteregg_content AS easterEggContent FROM EasterEgg WHERE 1=1 AND INSTR(?, easteregg_input) > 0 ORDER BY rand()', [prompt]);
+    const [rows] = await pool.query(`SELECT easteregg_content AS easterEggContent FROM EasterEgg WHERE 1=1 AND INSTR(?, easteregg_input) > 0 ORDER BY rand()`, [prompt]);
+    console.log(`${rows[0].easterEggContent.replace(/\\n/g, '\n')}`);
     if (rows.length > 0) {
-        return rows[0].easterEggContent;
+        return rows[0].easterEggContent.replace(/\\n/g, '\n');
     }
 
     return false; 
