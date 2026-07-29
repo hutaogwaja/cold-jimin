@@ -3,6 +3,7 @@ import path from 'node:path';
 import mysql from 'mysql2/promise';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import { exec } from 'node:child_process';
 import { useOllamaAI } from './modules/useOllamaAI.js';
 import { useOpenAI } from './modules/useOpenAI.js';
 
@@ -67,27 +68,55 @@ client.on('clientReady', async () => {
     
     const channelId = config.LogChannel;
     let DatabaseStatus = "기능 정지";
+    let gitStatus = "연결 안됨";
 
     console.log(`인공지민 가동 준비 완료!`);
 
     // DB 연결
     try {
         const [rows] = await pool.query('SELECT 1 + 1 AS solution');
-        console.log(`[DB 연결 성공] 테스트 쿼리 결과에여!: ${rows[0].solution}`);
-        DatabaseStatus = "연결 성공";
+        DatabaseStatus = "연결 성공했어여!!";
     } catch (error) {
         console.error('[DB 연결 실패] MySQL 설정이나 서버 상태를 확인해줘여!!', error.message);
-        DatabaseStatus = "연결 실패";
+        DatabaseStatus = "연결 실패했어여... 설정이나 서버 상태를 확인해줘여!!";
+    }
+
+    try{ // 깃 버전 확인
+        exec('git fetch', (fetchError) => {
+        if (fetchError) {
+            gitStatus = "Git fetch 실패 : " + fetchError.message;
+            
+        }
+
+        exec('git status -uno', (statusError, stdout) => {
+            if (statusError) {
+                gitStatus = "상태값 조회 실패 : " + statusError.message;
+            }
+
+            // 결과 분석
+            if (stdout.includes('Your branch is up to date')) {
+                gitStatus = "최신 버전이에요!!";
+            } else if (stdout.includes('Your branch is behind')) {
+                gitStatus = "최신 버전이 아니에여... 업데이트 필요해여...";
+            } else {
+                // 로컬에서 임의로 수정한 파일이 있는 경우 등
+                gitStatus = "따로 여기에서 수정한거 같은데여...";
+            }
+        });
+    });
+    }catch(error){
+        await channel.send('깃 버전 확인하는데 문제가 발생했어여!!:', error);
     }
 
     // 지정된 채널에 상태값 보내기
     try {
         const channel = await client.channels.fetch(channelId);
         if (channel) {
-            await channel.send(`# 인공지민 가동완료!!\n\n[인공지민 상태값]\n- DB 상태: ${DatabaseStatus}\n- 챗봇 상태: ${config.chatbotSettings.chatBotType}\n- 이모지 분기 처리: ${config.chatbotSettings.divideEmoji}`);
+            await channel.send(`# 인공지민 가동완료!!\n\n[인공지민 상태값]\n- DB 상태: ${DatabaseStatus}\n- 깃 버전 상태: ${gitStatus}\n- 챗봇 상태: ${config.chatbotSettings.chatBotType}\n- 이모지 분기 처리: ${config.chatbotSettings.divideEmoji}`);
+            
         }
     } catch (error) {
-        console.error('무언가 문제가 발생했어여!!:', error);
+        await channel.send('무언가 문제가 발생했어여!!:', error);
     }
 });
 
@@ -97,8 +126,8 @@ const TEN_MINUTES = 10 * 60 * 1000;
 
 async function getSpecificComment(prompt, message) {
     const [rows] = await pool.query(`SELECT easteregg_content AS easterEggContent FROM EasterEgg WHERE 1=1 AND INSTR(?, easteregg_input) > 0 ORDER BY rand()`, [prompt]);
-    console.log(`${rows[0].easterEggContent.replace(/\\n/g, '\n')}`);
     if (rows.length > 0) {
+        console.log(`${rows[0].easterEggContent.replace(/\\n/g, '\n')}`);
         return rows[0].easterEggContent.replace(/\\n/g, '\n');
     }
 
@@ -152,7 +181,7 @@ client.on('messageCreate', async (message) => {
         // 특별 메세지들이 나오면 다음과 같이 답변 후 return
         if(!prompt){
             await message.reply("인공지민이에요");
-        }else if(specificComment){
+        }else if(specificComment){ //DB에서 조회때림
             await message.reply(specificComment, message);
             return;
         }else{ // 특별한 메세지 없을 시 챗봇 기능
