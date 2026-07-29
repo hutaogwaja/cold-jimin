@@ -75,13 +75,30 @@ async function divideEmoji(line, message){
 
 //봇이 준비가 된다면?(서버가 켜진다면)
 client.on('clientReady', async () => {
+    
+    const channelId = config.LogChannel;
+    let DatabaseStatus = "기능 정지";
+
     console.log(`인공지민 가동 준비 완료!`);
 
+    // DB 연결
     try {
         const [rows] = await pool.query('SELECT 1 + 1 AS solution');
         console.log(`[DB 연결 성공] 테스트 쿼리 결과에여!: ${rows[0].solution}`);
+        DatabaseStatus = "연결 성공";
     } catch (error) {
         console.error('[DB 연결 실패] MySQL 설정이나 서버 상태를 확인해줘여!!', error.message);
+        DatabaseStatus = "연결 실패";
+    }
+
+    // 지정된 채널에 상태값 보내기
+    try {
+        const channel = await client.channels.fetch(channelId);
+        if (channel) {
+            await channel.send(`인공지민 가동완료!!\n\n[인공지민 상태값]\n- DB 상태: ${DatabaseStatus}\n- 챗봇 상태: ${config.chatbotSettings.chatBotType}\n- 이모지 분기 처리: ${config.chatbotSettings.divideEmoji}`);
+        }
+    } catch (error) {
+        console.error('무언가 문제가 발생했어여!!:', error);
     }
 });
 
@@ -121,11 +138,9 @@ client.on('messageCreate', async (message) => {
     if (mentioned && recentlyMentioned) { 
         recentUsers.set(message.author.id, now); 
     }
-
     
     // 메세지 타이핑 중으로 표기
     await message.channel.sendTyping();
-
 
     try {
         // 순수 텍스트만 추출 (멘션 태그 제거)
@@ -146,41 +161,43 @@ client.on('messageCreate', async (message) => {
         }else if(prompt.includes("자기소개")){
             await message.reply("저는 인공지민이고, 갈비만두가 최애에요\n그리고 전문하사를 해서 휴머를 빛낼거에요!!\n아, 그리고 저는 AI에요!!");
         }else{ // 특별한 메세지 없을 시 챗봇 기능
-            
             const start = performance.now();
-            
-            /*
-            // AI 사용 안할 시에
-            await message.channel.send(`저는 지금 챗봇 기능아 안되여... 미아내여...`);
-            
-            */
-           
-            // openAI API 사용시
-            await useOpenAI(prompt, SYSTEM_PROMPT, async (line) => {
-                console.log(line);
-                
-                await message.channel.send(line);
-                //이모지랑 채팅 분활하는 코드 
-                //await divideEmoji(line, message);
-            });
 
-            /*
-            // Ollama AI 사용 시
-            await useOllamaAI(prompt, SYSTEM_PROMPT, async (line) => {
-                console.log(line);
-
-                await message.channel.send(line);
-                //이모지랑 채팅 분활하는 코드 
-                //await divideEmoji(line, message);
-            });
-            */
-           
+            await message.channel.send(`현재 상태값은 ${config.chatbotSettings.chatBotType} 이에여!!`);
             
-
-            //console.log(data);
             
+            // config값에 따라 챗봇 여부 결정
+            switch(config.chatbotSettings.chatBotType){
+                case "N": // AI 사용 안할 시에
+                    await message.reply(`저는 지금 챗봇 기능아 안되여... 미아내여...`);
+                    return;
+                case "openAI" : // openAI API 사용시
+                    await useOpenAI(prompt, SYSTEM_PROMPT, async (line) => {
+                        console.log(line);
+                        
+                        if(config.chatbotSettings.divideEmoji === "Y"){
+                            await divideEmoji(line, message);
+                        }else{
+                            await message.channel.send(line);
+                        }
+                    });
+                    break;
+                case "ollamaAI" : // Ollama AI 사용 시
+                    await useOllamaAI(prompt, SYSTEM_PROMPT, async (line) => {
+                        console.log(line);
+                        
+                        if(config.chatbotSettings.divideEmoji === "Y"){
+                            await divideEmoji(line, message);
+                        }else{
+                            await message.channel.send(line);
+                        }
+                    });
+                    break;
+                default:
+                    await message.reply(`설정이 잘못된거 같아여!!`);
+                    return;
+            }
 
-            
             // 답변까지 걸린 시간 측정하기
             const elapsed = performance.now() - start;
             console.log(`Done! - took:${(elapsed / 1000).toFixed(2)}s`)
