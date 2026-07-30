@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import mysql from 'mysql2/promise';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { Client, GatewayIntentBits, Collection } from 'discord.js';
+import { Client, GatewayIntentBits, Collection, EmbedBuilder } from 'discord.js';
 import { exec } from 'node:child_process';
 import { useOllamaAI } from './modules/useOllamaAI.js';
 import { useOpenAI } from './modules/useOpenAI.js';
@@ -63,12 +63,43 @@ async function divideEmoji(line, message){
     }
 }
 
+async function getGitStatus()
+{
+    try{ // 깃 버전 확인
+        exec('git fetch', (fetchError) => {
+        if (fetchError) {
+            return "Git fetch 실패 : " + fetchError.message;
+        }
+
+        exec('git status -uno', (statusError, stdout) => {
+            if (statusError) {
+                return "상태값 조회 실패 : " + statusError.message;
+            }else{
+                // 결과 분석
+                if (stdout.includes('Your branch is up to date')) {
+                    return "최신 버전이에요!!";
+                } else if (stdout.includes('Your branch is behind')) {
+                    return "최신 버전이 아니에여... 업데이트 필요해여...";
+                } else {
+                    // 로컬에서 임의로 수정한 파일이 있는 경우 등
+                    return "따로 여기에서 수정한거 같은데여...";
+                }
+            }
+        });
+    });
+    }catch(error){
+        await channel.send('깃 버전 확인하는데 문제가 발생했어여!!:', error);
+    }
+}
+
 //봇이 준비가 된다면?(서버가 켜진다면)
-client.on('clientReady', async () => {
+client.on('clientReady', async (client) => {
     
     const channelId = config.LogChannel;
+    const channel = await client.channels.fetch(channelId);
+
     let DatabaseStatus = "기능 정지";
-    let gitStatus = "연결 안됨";
+    let gitStatus = "아직 제작 중";
 
     console.log(`인공지민 가동 준비 완료!`);
 
@@ -81,42 +112,36 @@ client.on('clientReady', async () => {
         DatabaseStatus = "연결 실패했어여... 설정이나 서버 상태를 확인해줘여!!";
     }
 
-    try{ // 깃 버전 확인
-        exec('git fetch', (fetchError) => {
-        if (fetchError) {
-            gitStatus = "Git fetch 실패 : " + fetchError.message;
-            
-        }
-
-        exec('git status -uno', (statusError, stdout) => {
-            if (statusError) {
-                gitStatus = "상태값 조회 실패 : " + statusError.message;
-            }
-
-            // 결과 분석
-            if (stdout.includes('Your branch is up to date')) {
-                gitStatus = "최신 버전이에요!!";
-            } else if (stdout.includes('Your branch is behind')) {
-                gitStatus = "최신 버전이 아니에여... 업데이트 필요해여...";
-            } else {
-                // 로컬에서 임의로 수정한 파일이 있는 경우 등
-                gitStatus = "따로 여기에서 수정한거 같은데여...";
-            }
-        });
-    });
-    }catch(error){
-        await channel.send('깃 버전 확인하는데 문제가 발생했어여!!:', error);
-    }
+    // gitStatus = getGitStatus();
+    console.log(gitStatus);
 
     // 지정된 채널에 상태값 보내기
     try {
-        const channel = await client.channels.fetch(channelId);
         if (channel) {
-            await channel.send(`# 인공지민 가동완료!!\n\n[인공지민 상태값]\n- DB 상태: ${DatabaseStatus}\n- 깃 버전 상태: ${gitStatus}\n- 챗봇 상태: ${config.chatbotSettings.chatBotType}\n- 이모지 분기 처리: ${config.chatbotSettings.divideEmoji}`);
+            const chatBotStatus = config.chatbotSettings.chatBotType === 'Y' ? `${config.chatbotSettings.chatBotType}을 토대로 연결됐어여!!`: "연결 안했어여...";
+            const dividedEmoji = config.chatbotSettings.divideEmoji === 'Y' ? `대화랑, 이모지가 메세지 단위로 나눠서 나와여!`: "대화랑 이모지가 붙어사 나와여!!";
+
+            const resultEmbed = new EmbedBuilder()
+                .setColor(0xFFFFF)
+                .setTitle('인공지민 가동완료!!')
+                .setDescription("작동 현황 및 연결 현황")
+                .setThumbnail(`${client.user.displayAvatarURL({ dynamic: true, size: 1024 })}`)
+                .addFields(
+                    { name: '데이터베이스', value: `${DatabaseStatus}` },
+                    { name: '버전 확인', value: `${gitStatus}`, inline: true},
+                    { name: '챗봇 기능 현황', value: `${chatBotStatus}`},
+                    { name: '이모지 분리 여부', value: `${dividedEmoji}`},
+                )
+                .setTimestamp() // 현재 시간 자동 표시
+                .setFooter({ text: client.user.username, iconURL: `${client.user.displayAvatarURL({ dynamic: true, size: 1024 })}` }); // 하단 푸터
+
+            await channel.send({ embeds: [resultEmbed] });
+
+            // await channel.send(`# 인공지민 가동완료!!\n\n[인공지민 상태값]\n- DB 상태: ${DatabaseStatus}\n- 깃 버전 상태: ${gitStatus}\n- 챗봇 상태: ${config.chatbotSettings.chatBotType}\n- 이모지 분기 처리: ${config.chatbotSettings.divideEmoji}`);
             
         }
     } catch (error) {
-        await channel.send('무언가 문제가 발생했어여!!:', error);
+        await channel.send('표기하는데에 문제가 발생했어여!!:', error);
     }
 });
 
