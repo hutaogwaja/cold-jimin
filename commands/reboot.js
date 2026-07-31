@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { exec } from 'node:child_process';
 import config from '../config.json' with { type: "json" };
+import { checkAdmin } from '../modules/database.js';
 
 export default {
     // 슬래시 명령어 메타데이터 정의
@@ -9,7 +10,7 @@ export default {
         .setDescription('재기동 어디서 들어본거 같은데여..'),
 
     async execute(interaction) {
-        if(interaction.user.id === config.authorID) {
+        if(await checkAdmin(config.authorID)) {
             await interaction.reply("잠시만 기다려봐여.... 재기동 중이에여... 🔄");
             
             // PM2로 재기동

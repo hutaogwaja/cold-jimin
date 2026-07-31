@@ -9,7 +9,7 @@ export default {
         .setDescription('이제 종료해야할거 같아여....'),
 
     async execute(interaction) {
-        if(interaction.user.id === config.authorID) {
+        if(await checkAdmin(config.authorID)){
             await interaction.reply("잘가세여.. 다음에 또 봐요...");
             
             // PM2로 종료

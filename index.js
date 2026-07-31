@@ -1,11 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import mysql from 'mysql2/promise';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { Client, GatewayIntentBits, Collection, EmbedBuilder } from 'discord.js';
 import { exec } from 'node:child_process';
 import { useOllamaAI } from './modules/useOllamaAI.js';
 import { useOpenAI } from './modules/useOpenAI.js';
+import { pool } from './modules/database.js';
 
 // 프롬프트 파일과 config 파일 가져오기
 const __filename = fileURLToPath(import.meta.url);
@@ -25,17 +25,6 @@ const client = new Client({
         GatewayIntentBits.DirectMessages,
         GatewayIntentBits.DirectMessageTyping,
     ],
-});
-
-const pool = mysql.createPool({
-    host: config.dataBase.host,
-    user: config.dataBase.user,
-    password: config.dataBase.password,
-    database: config.dataBase.name,
-    port: config.dataBase.port,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
 });
 
 // 랜덤 번호 가져오는 함수
@@ -124,7 +113,7 @@ client.on('clientReady', async (client) => {
             const resultEmbed = new EmbedBuilder()
                 .setColor(0xFFFFF)
                 .setTitle('인공지민 가동완료!!')
-                .setDescription("작동 현황 및 연결 현황")
+                .setDescription("새 슬래시 코드 추가 후 가동 시, 디스코드를 껐다 켜야 슬래시 커맨드가 반영됩니다")
                 .setThumbnail(`${client.user.displayAvatarURL({ dynamic: true, size: 1024 })}`)
                 .addFields(
                     { name: '데이터베이스', value: `${DatabaseStatus}` },
