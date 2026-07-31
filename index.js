@@ -119,7 +119,7 @@ client.on('clientReady', async (client) => {
     try {
         if (channel) {
             const chatBotStatus = config.chatbotSettings.chatBotType === 'Y' ? `${config.chatbotSettings.chatBotType}을 토대로 연결됐어여!!`: "연결 안했어여...";
-            const dividedEmoji = config.chatbotSettings.divideEmoji === 'Y' ? `대화랑, 이모지가 메세지 단위로 나눠서 나와여!`: "대화랑 이모지가 붙어사 나와여!!";
+            const dividedEmoji = config.chatbotSettings.divideEmoji === 'Y' ? `대화랑, 이모지가 메세지 단위로 나눠서 나와여!`: "대화랑 이모지가 붙어서 나와여!!";
 
             const resultEmbed = new EmbedBuilder()
                 .setColor(0xFFFFF)
