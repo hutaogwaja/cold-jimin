@@ -1,5 +1,5 @@
 //피셔-예이츠 셔플
-export function randomSortArray(arr){
+export async function randomSortArray(arr){
     for (var i=arr.length-1; i>0; i--) {
         // 0부터 i 사이의 무작위 인덱스 생성
         const j = Math.floor(Math.random() * (i + 1));
