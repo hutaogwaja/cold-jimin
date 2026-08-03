@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from 'discord.js';
 import { exec } from 'node:child_process';
 import config from '../config.json' with { type: "json" };
+import { checkAdmin } from '../modules/database.js';
 
 export default {
     // 슬래시 명령어 메타데이터 정의
@@ -9,7 +10,7 @@ export default {
         .setDescription('이제 종료해야할거 같아여....'),
 
     async execute(interaction) {
-        if(await checkAdmin(config.authorID)){
+        if(await checkAdmin(interaction.user.id)){
             await interaction.reply("잘가세여.. 다음에 또 봐요...");
             
             // PM2로 종료
