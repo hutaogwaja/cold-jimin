@@ -107,7 +107,7 @@ client.on('clientReady', async (client) => {
     // 지정된 채널에 상태값 보내기
     try {
         if (channel) {
-            const chatBotStatus = config.chatbotSettings.chatBotType === 'Y' ? `${config.chatbotSettings.chatBotType}을 토대로 연결됐어여!!`: "연결 안했어여...";
+            const chatBotStatus = config.chatbotSettings.chatBotType !== 'N' ? `${config.chatbotSettings.chatBotType}을 토대로 연결됐어여!!`: "연결 안했어여...";
             const dividedEmoji = config.chatbotSettings.divideEmoji === 'Y' ? `대화랑, 이모지가 메세지 단위로 나눠서 나와여!`: "대화랑 이모지가 붙어서 나와여!!";
 
             const resultEmbed = new EmbedBuilder()
