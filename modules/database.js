@@ -9,7 +9,8 @@ export const pool = mysql.createPool({
     port: config.dataBase.port,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    connectTimeout: 20000
 });
 
 
@@ -23,9 +24,15 @@ export async function checkAdmin(id) {
     AND user_id = ?
     `, [config.botType, id]);
     
+
+    if (!rows || rows.length === 0) {
+        return false;
+    }
+
     if (rows[0].userAdmin === 1) {
         return true;
-    }
+    }  
+
     return false; 
 }
 export async function getUserInfo(id) {

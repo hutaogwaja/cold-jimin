@@ -10,7 +10,7 @@ export default {
         .setDescription('재기동 어디서 들어본거 같은데여..'),
 
     async execute(interaction) {
-        if(await checkAdmin(config.authorID)) {
+        if(await checkAdmin(interaction.user.id)) {
             await interaction.reply("잠시만 기다려봐여.... 재기동 중이에여... 🔄");
             
             // PM2로 재기동
@@ -20,7 +20,7 @@ export default {
                 }
             });
         }else{
-            await interaction.reply("으아아아아!!! 선생님은!! 저를 재기동할 권한이 없자나여!!!");
+            await interaction.reply(`으아아아아!!! 선생님은!! 저를 재기동할 권한이 없자나여!!!`);
         }
     }
 };

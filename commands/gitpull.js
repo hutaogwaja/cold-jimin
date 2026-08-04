@@ -6,21 +6,21 @@ import { checkAdmin } from '../modules/database.js';
 export default {
     // 슬래시 명령어 메타데이터 정의
     data: new SlashCommandBuilder()
-        .setName('종료')
-        .setDescription('이제 종료해야할거 같아여....'),
+        .setName('gitpull')
+        .setDescription('Git 저장소에서 최신 변경 사항을 가져옵니다.'),
 
     async execute(interaction) {
         if(await checkAdmin(interaction.user.id)){
-            await interaction.reply("잘가세여.. 다음에 또 봐요...");
+            await interaction.reply("Git 저장소에서 수정 사항을 가져올거에여....");
             
             // PM2로 종료
-            exec("pm2 delete cold-jimin", (error, stdout, stderr) => {
+            exec("git pull origin main", (error, stdout, stderr) => {
                 if (error) {
                     console.error(`종료 실패: ${error.message}`);
                 }
             });
         }else{
-            await interaction.reply("으아아아아!!! 선생님은!! 저를 종료할 권한이 없자나여!!!");
+            await interaction.reply("으아아아아!!! 선생님은!! 저의 코드를 가져올 권한이 없자나여!!!");
         }
     }
 };
