@@ -14,7 +14,7 @@ export default {
             await interaction.reply("잠시만 기다려봐여.... 재기동 중이에여... 🔄");
             
             // PM2로 재기동
-            exec("pm2 restart \"cold-jimin\" --update-env", (error, stdout, stderr) => {
+            exec("node setCommands.js && pm2 restart \"cold-jimin\" --update-env", (error, stdout, stderr) => {
                 if (error) {
                     console.error(`재기동 실패: ${error.message}`);
                 }
