@@ -7,7 +7,7 @@ export default {
     // 슬래시 명령어 메타데이터 정의
     data: new SlashCommandBuilder()
         .setName('깃풀')
-        .setDescription('Git 저장소에서 최신 변경 사항을 가져옵니다.'),
+        .setDescription('Git 저장소에서 최신 변경 사항을 가져올거에여!!!.'),
 
     async execute(interaction) {
         if(await checkAdmin(interaction.user.id)){
