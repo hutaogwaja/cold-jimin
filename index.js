@@ -37,8 +37,8 @@ function getMilliseconds(miniute){
     return miniute * 60 * 1000;
 }
 
+// 이모지 분기 처리 패턴 체크
 async function divideEmoji(line, message){
-    // 이모지 분기 처리 패턴 체크
     const match = line.match(/^(.*?)(<a?:\w+:\d+>|(?:\p{Extended_Pictographic}(?:\uFE0F)?(?:\u200D\p{Extended_Pictographic}(?:\uFE0F)?)*)+)\s*$/u);
 
     if (match) {
@@ -52,9 +52,21 @@ async function divideEmoji(line, message){
     }
 }
 
-async function getGitStatus()
-{
-    try{ // 깃 버전 확인
+// 폴더 내 피알 개수 가져오기
+async function getFileCount(folderPath) {
+    try {
+        const files = await fs.readdir(folderPath);
+        console.log(files.length)
+        return files.length;
+    } catch (error) {
+        console.error('폴더를 읽는 중 에러가 발생했습니다:', error.message);
+        return 0;
+    }
+}
+
+// 깃 버전 확인
+async function getGitStatus(){
+    try{ 
         exec('git fetch', (fetchError) => {
         if (fetchError) {
             return "Git fetch 실패 : " + fetchError.message;
@@ -80,6 +92,7 @@ async function getGitStatus()
         await channel.send('깃 버전 확인하는데 문제가 발생했어여!!:', error);
     }
 }
+
 
 //봇이 준비가 된다면?(서버가 켜진다면)
 client.on('clientReady', async (client) => {
@@ -109,6 +122,9 @@ client.on('clientReady', async (client) => {
         if (channel) {
             const chatBotStatus = config.chatbotSettings.chatBotType !== 'N' ? `${config.chatbotSettings.chatBotType}을 토대로 연결됐어여!!`: "연결 안했어여...";
             const dividedEmoji = config.chatbotSettings.divideEmoji === 'Y' ? `대화랑, 이모지가 메세지 단위로 나눠서 나와여!`: "대화랑 이모지가 붙어서 나와여!!";
+            const fileCount = await getFileCount(path.join(__dirname, 'commands'));
+            
+            await channel.send(fileCount);
 
             const resultEmbed = new EmbedBuilder()
                 .setColor(0xFFFFF)
@@ -116,6 +132,7 @@ client.on('clientReady', async (client) => {
                 .setDescription("새 슬래시 코드 추가 후 가동 시, 디스코드를 껐다 켜야 슬래시 커맨드가 반영됩니다")
                 .setThumbnail(`${client.user.displayAvatarURL({ dynamic: true, size: 1024 })}`)
                 .addFields(
+                    { name: '슬래시 명령어 개수', value: `${fileCount}` },
                     { name: '데이터베이스', value: `${DatabaseStatus}` },
                     { name: '버전 확인', value: `${gitStatus}`, inline: true},
                     { name: '챗봇 기능 현황', value: `${chatBotStatus}`},
@@ -243,45 +260,6 @@ client.on('messageCreate', async (message) => {
     } catch (error) {
         console.error(error);
         await message.reply(`으아아아아!!! 오류가 발생했어여... 미아내여... 😭\n 대충 에러가 이렇게 되여..\n\n${error}`);
-    }
-});
-
-
-
-// 봇 객체에 commands를 담을 Collection 생성
-client.commands = new Collection();
-
-// commands 폴더에서 명령어 파일 불러오기
-const commandsPath = path.join(__dirname, 'commands');
-const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-
-for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
-    const commandModule = await import(pathToFileURL(filePath).href);
-    const command = commandModule.default;
-    
-    if ('data' in command && 'execute' in command) {
-        client.commands.set(command.data.name, command);
-    }
-}
-
-// 슬래시 명령어 실행 처리 이벤트
-client.on('interactionCreate', async interaction => {
-    if (!interaction.isChatInputCommand()) return;
-
-    const command = client.commands.get(interaction.commandName);
-    if (!command) return;
-
-    try {
-        await command.execute(interaction);
-    } catch (error) {
-        console.error(error);
-        const errorMessage = { content: '명령어를 실행하는 중 오류가 발생했습니다!', ephemeral: true };
-        if (interaction.replied || interaction.deferred) {
-            await interaction.followUp(errorMessage);
-        } else {
-            await interaction.reply(errorMessage);
-        }
     }
 });
 
