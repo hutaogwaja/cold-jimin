@@ -13,7 +13,7 @@ const openai = new OpenAI({
 export async function useOpenAI(prompt, systemPrompt, onLine) {
     // 1. stream: true 옵션 추가
     const stream = await openai.chat.completions.create({
-        model: "gpt-4o-mini", //"local-model",
+        model: "gpt-5.6-luna", //"local-model",
         messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: prompt }
