@@ -134,7 +134,6 @@ client.on('clientReady', async (client) => {
                 .setDescription("새 슬래시 코드 추가 후 가동 시, 디스코드를 껐다 켜야 슬래시 커맨드가 반영됩니다")
                 .setThumbnail(`${client.user.displayAvatarURL({ dynamic: true, size: 1024 })}`)
                 .addFields(
-                    //{ name: '슬래시 명령어 개수', value: `${fileCount}` },
                     { name: '데이터베이스', value: `${DatabaseStatus}` },
                     { name: '버전 확인', value: `${gitStatus}`, inline: true},
                     { name: '챗봇 기능 현황', value: `${chatBotStatus}`},
@@ -143,6 +142,8 @@ client.on('clientReady', async (client) => {
                 .setTimestamp() // 현재 시간 자동 표시
                 .setFooter({ text: client.user.username, iconURL: `${client.user.displayAvatarURL({ dynamic: true, size: 1024 })}` }); // 하단 푸터
 
+            
+                    //{ name: '슬래시 명령어 개수', value: `${fileCount}` },
             await channel.send({ embeds: [resultEmbed] });
 
             // await channel.send(`# 인공지민 가동완료!!\n\n[인공지민 상태값]\n- DB 상태: ${DatabaseStatus}\n- 깃 버전 상태: ${gitStatus}\n- 챗봇 상태: ${config.chatbotSettings.chatBotType}\n- 이모지 분기 처리: ${config.chatbotSettings.divideEmoji}`);
@@ -215,7 +216,6 @@ client.on('messageCreate', async (message) => {
         if(!prompt){
             await message.reply("인공지민이에요");
         }else if(specificComment){ //DB에서 조회때림
-            message.channel.send(specificComment);
             await message.reply(specificComment, message);
             return;
         }else{ // 특별한 메세지 없을 시 챗봇 기능
