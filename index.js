@@ -215,6 +215,7 @@ client.on('messageCreate', async (message) => {
         if(!prompt){
             await message.reply("인공지민이에요");
         }else if(specificComment){ //DB에서 조회때림
+            message.channel.send(specificComment);
             await message.reply(specificComment, message);
             return;
         }else{ // 특별한 메세지 없을 시 챗봇 기능
