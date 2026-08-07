@@ -30,11 +30,7 @@ export async function useOpenAI(prompt, systemPrompt, onLine) {
             "summary": "auto"
           },
           tools: [],
-          store: true,
-          include: [
-            "reasoning.encrypted_content",
-            "web_search_call.action.sources"
-          ]
+          store: true
     });
 
     let textBuffer = "";
