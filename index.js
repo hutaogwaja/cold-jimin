@@ -124,7 +124,7 @@ client.on('clientReady', async (client) => {
             const dividedEmoji = config.chatbotSettings.divideEmoji === 'Y' ? `대화랑, 이모지가 메세지 단위로 나눠서 나와여!`: "대화랑 이모지가 붙어서 나와여!!";
             const fileCount = await getFileCount(path.join(__dirname, 'commands'));
             
-            await channel.send(fileCount);
+            // await channel.send(fileCount);
 
             const resultEmbed = new EmbedBuilder()
                 .setColor(0xFFFFF)
@@ -132,7 +132,7 @@ client.on('clientReady', async (client) => {
                 .setDescription("새 슬래시 코드 추가 후 가동 시, 디스코드를 껐다 켜야 슬래시 커맨드가 반영됩니다")
                 .setThumbnail(`${client.user.displayAvatarURL({ dynamic: true, size: 1024 })}`)
                 .addFields(
-                    { name: '슬래시 명령어 개수', value: `${fileCount}` },
+                    //{ name: '슬래시 명령어 개수', value: `${fileCount}` },
                     { name: '데이터베이스', value: `${DatabaseStatus}` },
                     { name: '버전 확인', value: `${gitStatus}`, inline: true},
                     { name: '챗봇 기능 현황', value: `${chatBotStatus}`},
