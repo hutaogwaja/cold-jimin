@@ -19,7 +19,8 @@ export async function useOpenAI(prompt, systemPrompt, onLine) {
             { role: "user", content: prompt }
         ],
         reasoning_effort: "medium", 
-        store: true
+        store: true,
+        stream: true
     });
 
     let textBuffer = "";
