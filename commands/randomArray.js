@@ -20,22 +20,19 @@ export default {
         crewMate = await randomSortArray(crewMate);
 
         let result = `순서 결과 : ${crewMate}`;
-        
-        await interaction.reply(result);
-
 
         const requesterImage = interaction.member.avatar ? `https://cdn.discordapp.com/guilds/${interaction.guildId}/users/${interaction.user.id}/avatars/${interaction.member.avatar}.webp?size=1024&animated=true` : `https://cdn.discordapp.com/avatars/${interaction.user.id}/${interaction.user.avatar}.webp?size=1024&animated=true`;
 
-        /*
+        
         const resultEmbed = new EmbedBuilder()
             .setColor(0xFFFFF) // 왼쪽 테두리 색상 (HEX 코드 또는 색상 이름)
-            .setTitle('팀을 랜덤으로 짜봤어여!!') // 제목
+            .setTitle('순서를 랜덤으로 정해봤어여!!') // 제목
             .setAuthor({ name: `요청자 : ${interaction.user.globalName} (${interaction.user.tag})`, iconURL: requesterImage }) // 상단 작성자 정보
             .setDescription(result) // 본문
             .setTimestamp() // 현재 시간 자동 표시
             .setFooter({ text: interaction.client.user.username, iconURL: `${interaction.client.user.displayAvatarURL({ dynamic: true, size: 1024 })}` }); // 하단 푸터
 
         await interaction.reply({ embeds: [resultEmbed] });
-        */
+        
     }
 };
