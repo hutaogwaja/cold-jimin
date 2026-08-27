@@ -183,6 +183,10 @@ client.on('messageCreate', async (message) => {
         return;
     } 
 
+    
+    // everyone이나 here 인지 확인
+    if(message.mentions.everyone) return;
+
     // 맨션 여부 확인(만약 채팅기능 작동 중이라면 그냥 패스하도록)
     const mentioned = message.mentions.has(client.user);
     
@@ -192,6 +196,7 @@ client.on('messageCreate', async (message) => {
 
     // 가장 최근 맨션이 10분 전일 때(아직 자동 채팅 기능이 작동 중일때)
     const recentlyMentioned = lastMention && (now - lastMention) < TEN_MINUTES;   
+
     
     // 채팅 기능 작동 안하거나 맨션 안했으면
     if (!mentioned && !recentlyMentioned) return; 
