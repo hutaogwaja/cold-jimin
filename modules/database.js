@@ -54,3 +54,38 @@ export async function getUserInfo(id) {
     }
     return false; 
 }
+
+export async function importTalkData(id, name, question, answer) {
+    await pool.query(`
+    INSERT INTO dialog(
+        dialog_date
+    ,   dialog_sender
+    ,   dialog_sender_name
+    ,   dialog_question
+    ,   dialog_answer
+    )
+    VALUES(
+        now()
+    ,   ?
+    ,   ?
+    ,   ?
+    ,   ?
+    )
+    `, [id, name, question, answer]);
+
+    return true;
+}
+
+export async function exportTalkData(id) {
+    const [rows] = await pool.query(`
+    SELECT 
+        DATE_FORMAT(dialog_date, '%Y-%m-%d %H:%m')		AS dialogDate
+    ,	dialog_question									AS dialogQuestion
+    ,	dialog_answer									AS dialogAnswer
+    FROM dialog
+    WHERE 1=1
+    AND dialog_sender = ?
+    `, [id]);
+    
+    return rows; 
+}

@@ -5,7 +5,7 @@ import { Client, GatewayIntentBits, Collection, EmbedBuilder } from 'discord.js'
 import { exec } from 'node:child_process';
 import { useOllamaAI } from './modules/useOllamaAI.js';
 import { useOpenAI } from './modules/useOpenAI.js';
-import { pool } from './modules/database.js';
+import { pool, importTalkData } from './modules/database.js';
 
 // 프롬프트 파일과 config 파일 가져오기
 const __filename = fileURLToPath(import.meta.url);
@@ -233,9 +233,10 @@ client.on('messageCreate', async (message) => {
                     await message.reply(`저는 지금 챗봇 기능아 안되여... 미아내여...`);
                     return;
                 case "openAI" : // openAI API 사용시
-                    await useOpenAI(prompt, SYSTEM_PROMPT, async (line) => {
+                    await useOpenAI(prompt, SYSTEM_PROMPT, message, async (line) => {
                         console.log(line);
-                        
+                        importTalkData(message.author.id, message.author.globalName, prompt, line);
+
                         if(config.chatbotSettings.divideEmoji === "Y"){
                             await divideEmoji(line, message);
                         }else{
